@@ -44,4 +44,8 @@ public interface BucketDao {
 	 */
 	public void deleteAllObjectsWithPrefix(String prefix);
 
+	/**
+	 * Delete bucket
+	 */
+	public void deleteBucket();
 }
