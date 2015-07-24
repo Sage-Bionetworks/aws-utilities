@@ -117,4 +117,10 @@ public class BucketDaoImpl implements BucketDao {
 		}
 	}
 
+	@Override
+	public void deleteBucket() {
+		deleteAllObjectsWithPrefix("");
+		awsS3Client.deleteBucket(bucketName);
+	}
+
 }
