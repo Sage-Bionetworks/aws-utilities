@@ -1,8 +1,6 @@
 package org.sagebionetworks.aws.utils.s3;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Calendar;
 
@@ -102,5 +100,92 @@ public class KeyGeneratorUtilTest {
 		String expected = "1984-03-13/22";
 		String resultsString = KeyGeneratorUtil.getDateAndHourFromTimeMS(cal.getTimeInMillis());
 		assertEquals(expected, resultsString);
+	}
+	
+	@Test
+	public void testParse(){
+		String key = "000000901/2020-12-25/23-58-57-999-uuid.csv.gz";
+		// call under test
+		KeyData data = KeyGeneratorUtil.parseKey(key);
+		assertNotNull(data);
+		assertEquals(901, data.getStackInstanceNumber());
+		assertEquals("accessrecord", data.getType());
+		assertEquals("000000901/2020-12-25", data.getPath());
+		assertEquals("23-58-57-999-uuid.csv.gz", data.getFileName());
+		assertFalse(data.isRolling());
+		// check the date by creating a new key.
+		String clone = KeyGeneratorUtil.createNewKey(data.getStackInstanceNumber(), data.getTimeMS(), data.isRolling());
+		assertTrue("Clone: "+clone, clone.startsWith("000000901/2020-12-25/23-58-57-999-"));
+		assertTrue("Clone: "+clone, clone.endsWith(".csv.gz"));
+	}
+	
+	@Test
+	public void testParseRolling(){
+		String key = "000000901/2020-12-25/23-58-57-999-uuid-rolling.csv.gz";
+		// call under test
+		KeyData data = KeyGeneratorUtil.parseKey(key);
+		assertNotNull(data);
+		assertEquals(901, data.getStackInstanceNumber());
+		assertEquals("accessrecord", data.getType());
+		assertEquals("000000901/2020-12-25", data.getPath());
+		assertEquals("23-58-57-999-uuid-rolling.csv.gz", data.getFileName());
+		assertTrue(data.isRolling());
+		// check the date by creating a new key.
+		String clone = KeyGeneratorUtil.createNewKey(data.getStackInstanceNumber(), data.getTimeMS(), data.isRolling());
+		assertTrue("Clone: "+clone, clone.startsWith("000000901/2020-12-25/23-58-57-999-"));
+		assertTrue("Clone: "+clone, clone.endsWith("-rolling.csv.gz"));
+	}
+	
+	@Test (expected=IllegalArgumentException.class)
+	public void testParseRollingTooManyParts(){
+		String key = "000000901/2020-12-25/23-58-57-999-uuid-rolling.csv./one";
+		// call under test
+		KeyGeneratorUtil.parseKey(key);
+	}
+	
+	@Test (expected=IllegalArgumentException.class)
+	public void testParseRollingTooFewParts(){
+		String key = "000000901/2020-12-25";
+		// call under test
+		KeyGeneratorUtil.parseKey(key);
+	}
+	
+	@Test (expected=IllegalArgumentException.class)
+	public void testParseBadDate(){
+		String key = "000000901/2020-12-25-3/23-58-57-999-uuid-rolling.csv";
+		// call under test
+		KeyGeneratorUtil.parseKey(key);
+	}
+	
+	@Test (expected=IllegalArgumentException.class)
+	public void testParseBadTime(){
+		String key = "000000901/2020-12-25/23-58-57.csv";
+		// call under test
+		KeyGeneratorUtil.parseKey(key);
+	}
+
+	@Test
+	public void testSnapshotKey(){
+		// Since S3 does alpha-numeric sorting on key names, we must pad all numbers
+		String expected = "000000008/type/2020-01-01/01-09-04-003-uuid.csv.gz";
+		String resultsString = KeyGeneratorUtil.createKey(8, "type", 2020, 1, 1, 1,9,4,3, "uuid", false);
+		assertEquals(expected, resultsString);
+	}
+
+	@Test
+	public void testParseKeyWithType(){
+		String key = "000000901/type/2020-12-25/23-58-57-999-uuid.csv.gz";
+		// call under test
+		KeyData data = KeyGeneratorUtil.parseKey(key);
+		assertNotNull(data);
+		assertEquals(901, data.getStackInstanceNumber());
+		assertEquals("type", data.getType());
+		assertEquals("000000901/type/2020-12-25", data.getPath());
+		assertEquals("23-58-57-999-uuid.csv.gz", data.getFileName());
+		assertFalse(data.isRolling());
+		// check the date by creating a new key.
+		String clone = KeyGeneratorUtil.createNewKey(data.getStackInstanceNumber(), data.getType(), data.getTimeMS(), data.isRolling());
+		assertTrue("Clone: "+clone, clone.startsWith("000000901/type/2020-12-25/23-58-57-999-"));
+		assertTrue("Clone: "+clone, clone.endsWith(".csv.gz"));
 	}
 }
