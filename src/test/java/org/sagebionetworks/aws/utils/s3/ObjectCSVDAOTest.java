@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -15,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.sagebionetworks.aws.utils.s3.ExampleObject.SomeEnum;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -52,7 +50,7 @@ public class ObjectCSVDAOTest {
 		boolean rolling = false;
 
 		// Build up some sample data
-		List<ExampleObject> data = buildExampleObjectList(12);
+		List<ExampleObject> data = ExampleObject.buildExampleObjectList(12);
 		// call under test.
 		String key = dao.write(data, timestamp, rolling);
 		// capture results
@@ -105,30 +103,5 @@ public class ObjectCSVDAOTest {
 		assertTrue(foundKeys.contains("four"));
 	}
 
-	private List<ExampleObject> buildExampleObjectList(int count) {
-		List<ExampleObject> data = new LinkedList<ExampleObject>();
-		for(int i=0; i<count; i++){
-			ExampleObject ob = new ExampleObject();
-			ob.setaBoolean(i%2 == 0);
-			ob.setaString("Value,"+i);
-			ob.setaLong(new Long(11*i));
-			ob.setaDouble(12312312.34234/i);
-			ob.setAnInteger(new Integer(i));
-			ob.setaFloat(new Float(123.456*i));
-			ob.setSomeEnum(SomeEnum.A);
-			// Add some nulls
-			if(i%3 == 0){
-				ob.setaBoolean(null);
-			}
-			if(i%4 == 0){
-				ob.setaString(null);
-			}
-			if(i%5 == 0){
-				ob.setaLong(null);
-			}
-			data.add(ob);
-		}
-		return data;
-	}
 
 }
